@@ -132,3 +132,4 @@ Contributions in that direction are welcome — open an issue.
 ## License
 
 MIT — see `LICENSE`. The Edge-IIoTset dataset is licensed separately by its original authors.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21328602.svg)](https://doi.org/10.5281/zenodo.21328602)
