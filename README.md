@@ -1,135 +1,74 @@
-# Correlation-Based Leakage Screening Is Insufficient for IoT/IIoT Intrusion-Detection Benchmarks
+# Correlation-Based Leakage Screening Is Insufficient for IoT/IIoT Intrusion-Detection Benchmarks: Redundant Shortcut Encoding in Edge-IIoTset
 
-Reproducibility package for the manuscript:
+Reproducibility package for the study of data leakage and shortcut learning in the **Edge-IIoTset** IoT/IIoT intrusion-detection benchmark.
 
-> F. M. Dhaou, "Correlation-Based Leakage Screening Is Insufficient for IoT/IIoT Intrusion-Detection Benchmarks: Redundant Shortcut Encoding in Edge-IIoTset," submitted to *IEEE Access*, 2026.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21328602.svg)](https://doi.org/10.5281/zenodo.21328602)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Author:** Fatma Mohammed Dhaou, Department of Management Information Systems, Faculty of Business Administration, University of Tabuk, Saudi Arabia
-**ORCID:** [0009-0000-9028-8033](https://orcid.org/0009-0000-9028-8033)
-**Contact:** fdhaou@ut.edu.sa
-
----
-
-## What this repository contains
-
-Code to reproduce every table and figure in the manuscript, from the raw Edge-IIoTset CSV to the final SHAP attributions.
-
-| File | Purpose |
-|---|---|
-| `01_main_analysis.ipynb` | Full pipeline: preprocessing, leakage screen, four classifiers on both feature sets, multi-class evaluation, SHAP. Reproduces Tables 2, 3, 5, 6 and Figures 1–5. |
-| `02_encoding_robustness.ipynb` | Robustness check: Logistic Regression under label vs. one-hot encoding, all preprocessing fitted on the training partition only. Reproduces Table 4. |
-| `requirements.txt` | Pinned dependencies. |
-| `LICENSE` | MIT. |
-
-Both notebooks run without modification in Google Colab.
+> **Summary.** On Edge-IIoTset, a linear classifier attains *perfect* binary separation (accuracy 1.0000) of fourteen heterogeneous attack types from benign traffic — a shortcut, not a genuine result. A correlation screen flags four protocol-identity fields carrying it; removing them collapses the linear model (1.0000 → 0.9566) but leaves Random Forest classifying all but one of 30,449 held-out records correctly (a single false positive). Mutual information, recursive feature elimination, an ablation cascade, adversarial validation, repeated cross-validation and a 1D-CNN show the shortcut is redundantly encoded and that **correlation-based screening is necessary but not sufficient**. Applied to CICIoT2023, the same protocol does not reproduce the signature, showing it discriminates leakage-driven from signal-driven benchmarks.
 
 ---
 
-## The finding, in brief
+## Repository contents
 
-On the uncontrolled 48-feature set, an L2-regularised **linear** classifier separates fourteen structurally heterogeneous attack types from benign traffic with **zero errors**. No genuine detection problem should permit this, and it indicates a label-encoding shortcut.
+| File | Description |
+|------|-------------|
+| `01_main_analysis.ipynb` | Preprocessing, correlation leakage screen, binary + multi-class classification, SHAP. Produces the core results (Tables 2, 3, 8, 9). |
+| `02_encoding_robustness.ipynb` | Reproduces the Logistic Regression collapse under label vs one-hot encoding, training-partition-only (Section IV-C). |
+| `03_revision_experiments.ipynb` | Mutual information, recursive feature elimination, adversarial validation, feature-ablation cascade, near-duplicate screen, repeated stratified cross-validation, 1D-CNN, extended imbalance-robust metrics, correlation-threshold sensitivity (Sections IV-D to IV-G; Tables 4, 6, 7). |
+| `04_cross_dataset_ciciot2023.ipynb` | Applies the diagnostic protocol to CICIoT2023; shows the Edge-IIoTset signature is absent (Section V). |
+| `05_figures.ipynb` | Regenerates all six manuscript figures at 300 dpi from the same pipeline. |
+| `requirements.txt` | Python dependencies. |
+| `CITATION.cff` | Citation metadata. |
+| `LICENSE` | MIT License. |
 
-A univariate correlation screen identifies four protocol-identity fields carrying that shortcut:
+## Which cell produces which figure (`05_figures.ipynb`)
 
-| Field | \|r\| with `Attack_label` |
-|---|---|
-| `dns.qry.name.len` | 0.966 |
-| `mqtt.topic` | 0.881 |
-| `mqtt.protoname` | 0.880 |
-| `mqtt.conack.flags` | 0.877 |
-
-Removing them collapses the linear model — and leaves Random Forest untouched:
-
-| Model | Uncontrolled (48) | Leakage-controlled (44) | Δ |
-|---|---|---|---|
-| Random Forest | 1.0000 | **1.0000** | 0.0000 |
-| Gradient Boosting | 1.0000 | 0.9999 | −0.0001 |
-| MLP | 0.9999 | 0.9990 | −0.0009 |
-| Logistic Regression | 1.0000 | **0.9566** | −0.0434 |
-
-Random Forest classifies **all 30,449 held-out records without a single error** after leakage control.
-
-The manuscript argues that the most parsimonious reading is *redundant shortcut encoding*: the screen removed the route to the shortcut that a hyperplane could exploit, and left others open for the non-linear learners. Correlation-based screening is therefore **necessary but not sufficient**, and a post-control accuracy of exactly 1.0000 should be read as a red flag, not a result.
-
-The collapse is **not** an artefact of the encoding scheme. Under one-hot encoding, with encoder, scaler, and classifier all fitted on the training partition only:
-
-| Encoding | Uncontrolled | Controlled |
-|---|---|---|
-| Label | 1.0000 | 0.9566 |
-| One-hot | 1.0000 | 0.9566 |
-
-Agreement to four decimal places. See `02_encoding_robustness.ipynb`.
-
----
+| Cell | Output file | Manuscript |
+|------|-------------|------------|
+| 3 | `Figure1_ROC.png` | Figure 1 — ROC curves (leakage-controlled) |
+| 4 | `Figure2_binary_confusion.png` | Figure 2 — Binary confusion matrix (one false positive) |
+| 5 | `Figure3_ablation.png` | Figure 3 — Feature-ablation cascade |
+| 6 | `Figure4_multiclass_confusion.png` | Figure 4 — Multi-class confusion matrix (15 classes) |
+| 7 | `Figure5_feature_importance.png` | Figure 5 — Top-15 Gini feature importance |
+| 8 | `Figure6_shap_summary.png` | Figure 6 — SHAP summary (n = 1000) |
 
 ## Data
 
-This repository does **not** redistribute the dataset. Obtain `ML-EdgeIIoT-dataset.csv` (the ML-ready release) from its original publishers:
+The notebooks require the ML-ready CSV files, which are **not** redistributed here:
 
-> M. A. Ferrag, O. Friha, D. Hamouda, L. Maglaras, and H. Janicke, "Edge-IIoTset: A new comprehensive realistic cyber security dataset of IoT and IIoT applications for centralized and federated learning," *IEEE Access*, vol. 10, pp. 40281–40306, 2022. doi: [10.1109/ACCESS.2022.3165809](https://doi.org/10.1109/ACCESS.2022.3165809)
+- **Edge-IIoTset** — `ML-EdgeIIoT-dataset.csv` (157,800 × 63). Available from the original publishers (Ferrag et al., IEEE Access 2022) via IEEE DataPort / Kaggle.
+- **CICIoT2023** — `train.csv` (Neto et al., Sensors 2023). Available from the Canadian Institute for Cybersecurity (UNB) / Kaggle. Used only by notebook 04.
 
-Place the CSV alongside the notebooks, or upload it when prompted in Colab.
+Place the relevant CSV in the working directory (or the Colab Files panel) before running a notebook.
 
----
+## How to run
 
-## Reproducing the results
+**Google Colab (recommended):** open a notebook via *File → Open notebook → GitHub*, enter `fdhaou-prog`, select the notebook, upload the CSV to the Files panel, and run all cells in order.
 
-### Google Colab (no installation)
-
-1. Open [colab.research.google.com](https://colab.research.google.com) → **File → Upload notebook**.
-2. Upload `01_main_analysis.ipynb`.
-3. Run the cells in order. Upload the CSV when prompted.
-
-### Locally
-
+**Locally:**
 ```bash
 pip install -r requirements.txt
-jupyter notebook 01_main_analysis.ipynb
+jupyter notebook
 ```
 
-Set `RANDOM_STATE = 42` (the default) to reproduce the published figures exactly.
+All experiments use a fixed random seed (`RS = 42`). After the 13 identifier/payload fields are dropped and duplicates removed, every notebook asserts the intermediate record count (152,245), so any deviation from the published pipeline is detected rather than silently propagated.
 
----
+## Key results reproduced
 
-## One reproducibility detail that matters
-
-**Duplicates must be removed *after* dropping the thirteen identifier and payload fields, not before.**
-
-While `frame.time`, `ip.src_host`, `tcp.payload` and the other identifier fields are present, almost every record is unique and only ~814 duplicates are detected. Once those fields are dropped, records that are identical in every *behavioural* feature collapse together, and **5,555** duplicates are found — yielding the 152,245 records reported in the manuscript.
-
-Both notebooks enforce this ordering and assert the row count. If your run does not print `152,245`, stop: nothing downstream will be comparable.
-
----
-
-## What this work does not claim
-
-Stated plainly, because the manuscript's argument depends on the distinction:
-
-- It does **not** claim to have *proven* residual leakage in the leakage-controlled feature set.
-- It does **not** claim that prior published results using Edge-IIoTset are invalid.
-- It does **not** claim that Random Forest's zero-error performance is definitely attributable to a shortcut rather than to genuine signal.
-
-The decisive test is **grouped, session-aware cross-validation**. The publicly released ML-ready CSV omits capture-session identifiers, so it cannot be performed on that file. Reconstructing session provenance from the per-attack capture files that precede the merged release is identified in the manuscript as the highest-priority next step.
-
-Contributions in that direction are welcome — open an issue.
-
----
+- Linear classifier: perfect binary separation on the uncontrolled feature set (accuracy 1.0000).
+- Four flagged protocol-identity fields: `dns.qry.name.len` (r ≈ 0.967), `mqtt.protoname`, `mqtt.topic`, `mqtt.conack.flags` (r ≈ 0.877).
+- After control: Random Forest 1.0000 (single false positive), Logistic Regression 0.9566.
+- Ablation floor ≈ 0.84 (conservative estimate of genuine signal).
+- Adversarial validation AUC = 0.4959 (clean split); near-duplicate rate 0.47%.
+- CICIoT2023: max |r| = 0.53, balanced linear separation MCC = 0.68 (no Edge-IIoTset signature).
 
 ## Citation
 
-```bibtex
-@article{dhaou2026leakage,
-  author  = {Dhaou, Fatma Mohammed},
-  title   = {Correlation-Based Leakage Screening Is Insufficient for
-             {IoT/IIoT} Intrusion-Detection Benchmarks: Redundant
-             Shortcut Encoding in {Edge-IIoTset}},
-  journal = {IEEE Access},
-  year    = {2026},
-  note    = {Under review}
-}
-```
+If you use this code, please cite the paper (see `CITATION.cff`) and this archive:
+
+> F. M. Dhaou, *Correlation-Based Leakage Screening Is Insufficient for IoT/IIoT Intrusion-Detection Benchmarks: Redundant Shortcut Encoding in Edge-IIoTset.* Code archive, Zenodo, https://doi.org/10.5281/zenodo.21328602
 
 ## License
 
-MIT — see `LICENSE`. The Edge-IIoTset dataset is licensed separately by its original authors.
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21328602.svg)](https://doi.org/10.5281/zenodo.21328602)
+MIT — see [LICENSE](LICENSE).
